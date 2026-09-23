@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>MediaForge v100 — Private Video &amp; Audio Compressor</title>
+<meta name="description" content="Compress and convert video and audio in your browser with FFmpeg.wasm. Files never leave your device.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e7c86'/%3E%3Cpath d='M24 18 46 32 24 46z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#eef1f4;--card:#fff;--soft:#e6ebf0;--line:#d3dae2;--ink:#14202b;--mut:#566574;--acc:#0e7c86;--acc2:#0a5f67;--ok:#0f7b4a;--warn:#a1500a;--bad:#c0262d;--r:12px}
+.dark{--bg:#0c1318;--card:#141d24;--soft:#1b2630;--line:#2a3845;--ink:#e8eef3;--mut:#9aabb9;--acc:#3cc0cc;--acc2:#7ad6de;--ok:#4ad08f;--warn:#f0a44b;--bad:#ff7b80}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+header{display:flex;align-items:center;gap:.6rem;max-width:980px;margin:0 auto;padding:.9rem 1rem}
+header b{font-size:1.1rem;letter-spacing:-.01em}header small{color:var(--mut)}
+main{max-width:980px;margin:0 auto;padding:0 1rem 3rem;display:grid;gap:1.1rem}
+h1{font-size:clamp(1.7rem,5vw,2.6rem);line-height:1.1;margin:.6rem 0 .3rem;letter-spacing:-.03em}
+h2{font-size:1.05rem;margin:0 0 .6rem}
+p{margin:0}.mut{color:var(--mut);font-size:.88rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:1rem}
+.drop{border:2px dashed var(--line);border-radius:var(--r);background:var(--card);padding:2rem 1rem;text-align:center;cursor:pointer;display:grid;gap:.4rem;justify-items:center}
+.drop:hover,.drop.over{border-color:var(--acc);background:var(--soft)}
+.btn{min-height:42px;padding:.5rem 1rem;border-radius:9px;border:1px solid var(--line);background:var(--soft);cursor:pointer;font-weight:600}
+.btn:hover:not(:disabled){border-color:var(--acc)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}.dark .btn.p{color:#04262a}
+.btn.p:hover:not(:disabled){background:var(--acc2)}.btn.d{color:var(--bad)}.btn.s{min-height:34px;padding:.25rem .7rem;font-size:.85rem}
+.grid{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:grid;gap:.25rem;font-size:.85rem;font-weight:600;color:var(--mut)}
+select,input[type=text],input[type=number]{width:100%;min-height:42px;padding:.4rem .6rem;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.chk{display:flex;align-items:center;gap:.5rem;font-weight:500;color:var(--ink);min-height:38px}.chk input{width:18px;height:18px;accent-color:var(--acc)}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.4rem}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:.2rem .7rem;font-size:.8rem;cursor:pointer}.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}.dark .chip.on{color:#04262a}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}
+.file{display:flex;gap:.8rem;align-items:center;padding:.7rem .9rem;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}
+.ext{flex:none;width:46px;height:46px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:800;font-size:.7rem;text-transform:uppercase;color:var(--acc)}
+.fb{flex:1;min-width:0}.fb p:first-child{font-weight:600;overflow-wrap:anywhere}
+.bar{height:10px;border-radius:9px;background:var(--soft);overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
+.bar.ind i{width:35%;animation:ind 1.3s ease-in-out infinite}@keyframes ind{from{transform:translateX(-110%)}to{transform:translateX(300%)}}
+.row{display:flex;gap:.6rem;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.5rem;margin:.6rem 0}
+.stat{background:var(--soft);border-radius:9px;padding:.5rem .7rem}.stat small{display:block;color:var(--mut);font-size:.72rem}.stat b{font-variant-numeric:tabular-nums}
+.tag{font-size:.75rem;font-weight:700;padding:.1rem .5rem;border-radius:99px;background:var(--soft)}.tag.ok{color:var(--ok)}.tag.w{color:var(--warn)}
+video,audio,.pv{width:100%;max-height:340px;border-radius:9px;background:#000;margin-top:.4rem}audio{background:none}.pv{object-fit:contain}
+pre{background:var(--soft);padding:.6rem;border-radius:9px;max-height:200px;overflow:auto;font-size:.75rem;white-space:pre-wrap;overflow-wrap:anywhere}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:max(1rem,env(safe-area-inset-bottom));width:min(460px,94vw);display:grid;gap:.5rem;z-index:50}
+.toast{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:9px;padding:.6rem .8rem;font-size:.87rem;box-shadow:0 8px 24px rgb(0 0 0/.2);display:flex;gap:.5rem;justify-content:space-between}
+.toast.error{border-left-color:var(--bad)}.toast.warning{border-left-color:var(--warn)}.toast.success{border-left-color:var(--ok)}
+.toast button{background:none;border:0;cursor:pointer;color:var(--mut)}
+[hidden]{display:none!important}summary{cursor:pointer;font-weight:600}
+footer{text-align:center;color:var(--mut);font-size:.8rem;padding:1rem}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<script>window.__errs=[];addEventListener("error",e=>window.__errs.push((e.message||"error")+" (line "+(e.lineno||"?")+")"));addEventListener("unhandledrejection",e=>window.__errs.push("Promise: "+((e.reason&&e.reason.message)||e.reason)))</script>
+<header>
+  <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0e7c86"/><path d="M24 18 46 32 24 46z" fill="#fff"/></svg>
+  <b>MediaForge</b><small>v100.1</small>
+  <span style="flex:1"></span>
+  <button id="theme" class="btn s" type="button" aria-label="Change theme">Theme</button>
+</header>
+<main>
+  <section>
+    <h1>Compress &amp; convert media, privately</h1>
+    <p class="mut">Everything runs in your browser. Your files are never uploaded.</p>
+  </section>
+
+  <section>
+    <div id="drop" class="drop" tabindex="0" role="button" aria-label="Choose media files">
+      <b>Drop video or audio here</b>
+      <span class="mut">MP4, MOV, MKV, WebM, AVI, MP3, M4A, WAV, FLAC, OGG, up to 10 files, 4 GB each</span>
+      <button id="browse" class="btn p" type="button">Choose files</button>
+      <input id="file" type="file" multiple accept="video/*,audio/*,.mkv,.mov,.flac,.opus,.m4a,.aac,.wav,.avi,.ts" hidden>
+    </div>
+    <div id="listwrap" hidden style="margin-top:.8rem">
+      <div class="row"><h2 style="margin:0">Files (<span id="cnt">0</span>)</h2><button id="clear" class="btn s" type="button">Clear all</button></div>
+      <ul id="files" style="margin-top:.6rem"></ul>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Output settings</h2>
+    <div class="grid">
+      <label>Format<select id="fmt"></select></label>
+      <label class="v">Resolution<select id="res"></select></label>
+      <label>Quality<select id="q"></select></label>
+    </div>
+    <div class="v" style="margin-top:.9rem">
+      <label>Target file size in MB (optional, overrides quality)<input id="mb" type="number" min="1" max="4000" step="1" inputmode="numeric" placeholder="No limit"></label>
+      <div class="chips" id="chips" role="group" aria-label="Size presets"></div>
+    </div>
+    <div class="grid" style="margin-top:.9rem">
+      <label>Trim start (s or mm:ss)<input id="ss" type="text" inputmode="text" placeholder="0:00"></label>
+      <label>Trim end (s or mm:ss)<input id="to" type="text" placeholder="End of file"></label>
+      <label class="v">Frame rate (fps)<input id="fps" type="number" min="1" max="120" placeholder="Keep original"></label>
+      <label class="v">Rotate<select id="rot"><option value="0">None</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° counter-clockwise</option></select></label>
+    </div>
+    <div class="grid" style="margin-top:.5rem">
+      <label class="chk v"><input id="mute" type="checkbox">Remove audio</label>
+      <label class="chk"><input id="norm" type="checkbox">Normalize loudness</label>
+    </div>
+    <p class="mut" id="hint" style="margin-top:.5rem"></p>
+  </section>
+
+  <div class="row" style="justify-content:center;flex-direction:column">
+    <button id="go" class="btn p" type="button" style="min-width:260px;min-height:50px" disabled>Compress / Convert</button>
+    <p class="mut" id="note">Add a file to get started. Shortcut: Ctrl+Enter.</p>
+  </div>
+
+  <section id="prog" class="card" hidden aria-live="polite">
+    <div class="row"><b id="pname">—</b><button id="cancel" class="btn s d" type="button">Cancel</button></div>
+    <div class="bar ind" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="margin:.6rem 0"><i></i></div>
+    <div class="row"><span class="mut" id="pstat">Preparing…</span><span id="ppct" class="mut"></span></div>
+  </section>
+
+  <section id="resw" hidden>
+    <div class="row" style="margin-bottom:.6rem"><h2 style="margin:0">Results</h2><span><button id="dlall" class="btn s" type="button" hidden>Download all</button> <button id="again" class="btn s" type="button">Convert more</button></span></div>
+    <ul id="results"></ul>
+  </section>
+</main>
+<details class="card" style="max-width:980px;margin:0 auto 1rem"><summary>System check</summary><p class="mut" style="margin:.5rem 0">If something does not work, press the test button and send me the text below.</p><pre id="diagtxt"></pre><button id="test" class="btn s" type="button">Test media engine</button></details>
+<footer>MediaForge v100.1 · FFmpeg.wasm · The engine (~30 MB) downloads on first use, then your browser caches it.</footer>
+<div id="toasts" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const h=(t,p={},...k)=>{const e=document.createElement(t);for(const[a,v]of Object.entries(p)){if(a==='text')e.textContent=v;else if(a.startsWith('on'))e.addEventListener(a.slice(2),v);else if(v!=null&&v!==false)e.setAttribute(a,v)}e.append(...k.flat().filter(x=>x!=null&&x!==false));return e};
+const store={get(k,d){try{const v=localStorage.getItem('mf100:'+k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem('mf100:'+k,JSON.stringify(v))}catch{}}};
+const fmtB=b=>{if(!Number.isFinite(b)||b<0)return'—';const u=['B','KB','MB','GB'];let i=0;while(b>=1024&&i<3){b/=1024;i++}return b.toFixed(i&&b<100?1:0)+' '+u[i]};
+const fmtT=s=>{if(!Number.isFinite(s)||s<=0)return'—';s=Math.round(s);const m=Math.floor(s/60);return s>=3600?Math.floor(s/3600)+':'+String(m%60).padStart(2,'0')+':'+String(s%60).padStart(2,'0'):m+':'+String(s%60).padStart(2,'0')};
+const parseT=v=>{v=String(v||'').trim();if(!v)return 0;const p=v.split(':').map(Number);return p.length>3||p.some(x=>!Number.isFinite(x)||x<0)?NaN:p.reduce((a,x)=>a*60+x,0)};
+function toast(m,type='info',ms=6500){const n=h('div',{class:'toast '+type,role:type==='error'?'alert':'status'},h('span',{text:m}),h('button',{type:'button','aria-label':'Dismiss',text:'✕',onclick:()=>n.remove()}));$('#toasts').append(n);if(ms)setTimeout(()=>n.remove(),ms)}
+
+/* ---------- theme ---------- */
+const THEMES=['system','light','dark'];let theme=store.get('theme','system');if(!THEMES.includes(theme))theme='system';
+const mq=matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(){document.documentElement.classList.toggle('dark',theme==='dark'||(theme==='system'&&mq.matches));$('#theme').textContent='Theme: '+theme}
+$('#theme').onclick=()=>{theme=THEMES[(THEMES.indexOf(theme)+1)%3];store.set('theme',theme);applyTheme()};
+mq.addEventListener?.('change',applyTheme);applyTheme();
+
+/* ---------- presets ---------- */
+const FM={
+ mp4:{k:'v',l:'MP4 · H.264 + AAC (most compatible)',v:'libx264',a:'aac',m:'video/mp4'},
+ webm:{k:'v',l:'WebM · VP9 + Opus (slow, small)',v:'libvpx-vp9',a:'libopus',m:'video/webm'},
+ mkv:{k:'v',l:'MKV · H.264 + AAC',v:'libx264',a:'aac',m:'video/x-matroska'},
+ mov:{k:'v',l:'MOV · H.264 + AAC',v:'libx264',a:'aac',m:'video/quicktime'},
+ gif:{k:'v',l:'GIF · animated, no sound',m:'image/gif'},
+ mp3:{k:'a',l:'MP3',a:'libmp3lame',m:'audio/mpeg'},
+ m4a:{k:'a',l:'M4A · AAC',a:'aac',m:'audio/mp4'},
+ opus:{k:'a',l:'Opus (best quality per size)',a:'libopus',m:'audio/ogg'},
+ ogg:{k:'a',l:'OGG · Vorbis',a:'libvorbis',m:'audio/ogg'},
+ flac:{k:'a',l:'FLAC · lossless',a:'flac',m:'audio/flac'},
+ wav:{k:'a',l:'WAV · uncompressed',a:'pcm_s16le',m:'audio/wav'}};
+const Q={low:{n:'Low · smallest file',crf:32,pr:'ultrafast',ab:96,mp3:128},balanced:{n:'Balanced · recommended',crf:26,pr:'veryfast',ab:128,mp3:192},high:{n:'High · better quality',crf:21,pr:'faster',ab:192,mp3:256},max:{n:'Maximum · near source',crf:17,pr:'medium',ab:256,mp3:320}};
+const RES={original:['Original size',0],'2160p':['4K · 2160p',2160],'1440p':['1440p',1440],'1080p':['1080p',1080],'720p':['720p',720],'480p':['480p',480],'360p':['360p',360]};
+const PRESETS=[['Off',0],['Discord 8 MB',8],['WhatsApp 16 MB',16],['Email 25 MB',25],['50 MB',50]];
+const VEXT=new Set('mp4 m4v webm mkv mov avi ogv wmv flv 3gp ts m2ts mpeg mpg'.split(' '));
+const AEXT=new Set('mp3 m4a aac wav flac ogg oga opus wma aiff aif amr ac3'.split(' '));
+const MAX=4*1024**3,WARN=500*1024**2,MAXFILES=10;
+
+/* ---------- state ---------- */
+const DEF={fmt:'mp4',res:'original',q:'balanced',mb:0,ss:'',to:'',fps:'',rot:'0',mute:false,norm:false};
+let S={...DEF,...(store.get('S',{})||{})};
+if(!FM[S.fmt])S.fmt='mp4';if(!RES[S.res])S.res='original';if(!Q[S.q])S.q='balanced';
+let items=[],results=[],running=false,cancelled=false,ff=null,logs=[],urls=[],uid=0;
+
+/* ---------- settings UI ---------- */
+function buildSettings(){
+ const f=$('#fmt');f.replaceChildren();
+ for(const[g,kind]of[['Video','v'],['Audio only','a']]){const og=h('optgroup',{label:g});for(const[k,v]of Object.entries(FM))if(v.k===kind)og.append(h('option',{value:k,text:v.l}));f.append(og)}
+ $('#res').replaceChildren(...Object.entries(RES).map(([k,v])=>h('option',{value:k,text:v[0]})));
+ $('#q').replaceChildren(...Object.entries(Q).map(([k,v])=>h('option',{value:k,text:v.n})));
+ $('#chips').replaceChildren(...PRESETS.map(([t,v])=>h('button',{type:'button',class:'chip','data-mb':v,text:t,onclick:()=>{S.mb=v;syncSettings();saveS()}})));
+ syncSettings();
+}
+function syncSettings(){
+ $('#fmt').value=S.fmt;$('#res').value=S.res;$('#q').value=S.q;$('#mb').value=S.mb||'';
+ $('#ss').value=S.ss;$('#to').value=S.to;$('#fps').value=S.fps;$('#rot').value=S.rot;$('#mute').checked=S.mute;$('#norm').checked=S.norm;
+ const audio=FM[S.fmt].k==='a',gif=S.fmt==='gif';
+ document.querySelectorAll('.v').forEach(e=>e.hidden=audio);
+ $('#mute').closest('label').hidden=audio||gif;
+ document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',Number(c.dataset.mb)===(S.mb||0)));
+ $('#q').disabled=S.fmt==='flac'||S.fmt==='wav';
+ $('#hint').textContent=S.fmt==='gif'?'GIFs are large. Use a short clip, a low resolution and 10 to 15 fps.':S.fmt==='webm'?'VP9 is slow in a browser. Use MP4 for long videos.':S.mb&&!audio?'Target size is approximate: the result usually lands within 10% of it.':'';
+ updateAction();
+}
+function readSettings(){
+ S.fmt=$('#fmt').value;S.res=$('#res').value;S.q=$('#q').value;
+ const mb=Number($('#mb').value);S.mb=Number.isFinite(mb)&&mb>0?Math.min(Math.round(mb),4000):0;
+ S.ss=$('#ss').value.trim();S.to=$('#to').value.trim();
+ const fp=Number($('#fps').value);S.fps=Number.isFinite(fp)&&fp>0?String(Math.min(Math.round(fp),120)):'';
+ S.rot=$('#rot').value;S.mute=$('#mute').checked;S.norm=$('#norm').checked;
+}
+const saveS=()=>store.set('S',S);
+document.querySelectorAll('#fmt,#res,#q,#mb,#ss,#to,#fps,#rot,#mute,#norm').forEach(e=>e.addEventListener('change',()=>{readSettings();saveS();syncSettings()}));
+
+/* ---------- files ---------- */
+function validate(file){
+ const ext=(file.name.split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,''),mime=(file.type||'').toLowerCase();
+ if(!file.size)return{err:'file is empty'};
+ if(file.size>MAX)return{err:'larger than 4 GB'};
+ const isA=mime.startsWith('audio/')||AEXT.has(ext),isV=mime.startsWith('video/')||VEXT.has(ext);
+ if(!isA&&!isV)return{err:'unsupported file type'};
+ return{ext:ext||'bin',kind:mime.startsWith('video/')||(VEXT.has(ext)&&!AEXT.has(ext))?'video':'audio'};
+}
+function probe(file){
+ return new Promise(res=>{
+  const u=URL.createObjectURL(file),v=document.createElement(file.type.startsWith('audio/')?'audio':'video');
+  let done=false;const end=r=>{if(done)return;done=true;clearTimeout(t);URL.revokeObjectURL(u);v.removeAttribute('src');v.load();res(r)};
+  const t=setTimeout(()=>end({}),10000);
+  v.preload='metadata';v.muted=true;
+  v.onloadedmetadata=()=>end({dur:Number.isFinite(v.duration)?v.duration:0,w:v.videoWidth||0,h:v.videoHeight||0});
+  v.onerror=()=>end({});v.src=u;
+ });
+}
+async function addFiles(list){
+ const added=[];
+ for(const file of list){
+  if(items.length+added.length>=MAXFILES){toast(`Only ${MAXFILES} files per run. Skipped ${file.name}.`,'warning');continue}
+  const v=validate(file);if(v.err){toast(`${file.name}: ${v.err}.`,'error');continue}
+  if(items.some(i=>i.file.name===file.name&&i.file.size===file.size&&i.file.lastModified===file.lastModified)||added.some(i=>i.file.name===file.name&&i.file.size===file.size))continue;
+  const it={id:++uid,file,ext:v.ext,kind:v.kind,dur:0,w:0,h:0};
+  if(file.size>WARN)toast(`${file.name} is large. Processing may be slow or run out of memory.`,'warning',9000);
+  added.push(it);
+ }
+ if(!added.length)return;
+ items.push(...added);renderFiles();
+ for(const it of added){Object.assign(it,await probe(it.file));renderFiles()}
+}
+function renderFiles(){
+ $('#listwrap').hidden=!items.length;$('#cnt').textContent=items.length;
+ $('#files').replaceChildren(...items.map(it=>h('li',{class:'file'},
+  h('div',{class:'ext','aria-hidden':'true',text:it.ext.slice(0,4)}),
+  h('div',{class:'fb'},h('p',{text:it.file.name}),h('p',{class:'mut',text:[fmtB(it.file.size),it.kind==='audio'?'Audio':'Video',it.w&&it.h?it.w+'×'+it.h:'',it.dur?fmtT(it.dur):''].filter(Boolean).join(' · ')})),
+  h('button',{class:'btn s',type:'button','aria-label':'Remove '+it.file.name,text:'✕',onclick:()=>{if(running)return toast('Cancel the current run first.','warning');items=items.filter(x=>x!==it);renderFiles()}}))));
+ updateAction();
+}
+function updateAction(){
+ $('#go').disabled=running||!items.length;
+ $('#note').textContent=!items.length?'Add a file to get started. Shortcut: Ctrl+Enter.':items.length===1?'Ready. Processing happens on this device.':`Ready. ${items.length} files will run one after another.`;
+}
+
+/* ---------- drag and drop ---------- */
+const drop=$('#drop'),fi=$('#file');let depth=0;
+const isFiles=e=>[...(e.dataTransfer?.types||[])].includes('Files');
+$('#browse').onclick=e=>{e.stopPropagation();fi.click()};
+drop.onclick=e=>{if(e.target!==fi)fi.click()};
+drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fi.click()}};
+fi.onchange=()=>{const l=[...fi.files];fi.value='';if(l.length)addFiles(l)};
+addEventListener('dragenter',e=>{if(isFiles(e)){e.preventDefault();depth++;drop.classList.add('over')}});
+addEventListener('dragover',e=>{if(isFiles(e))e.preventDefault()});
+addEventListener('dragleave',e=>{if(isFiles(e)){depth=Math.max(0,depth-1);if(!depth)drop.classList.remove('over')}});
+addEventListener('drop',e=>{if(!isFiles(e))return;e.preventDefault();depth=0;drop.classList.remove('over');const l=[...e.dataTransfer.files];if(l.length)addFiles(l)});
+$('#clear').onclick=()=>{if(running)return toast('Cancel the current run first.','warning');items=[];renderFiles()};
+
+/* ---------- engine ---------- */
+const CDNS=['https://cdn.jsdelivr.net/npm','https://unpkg.com'];
+const loadScript=src=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>{s.remove();rej(new Error('Could not load '+src))};document.head.append(s)});
+const withTimeout=(p,ms,msg)=>{let t;return Promise.race([p,new Promise((_,r)=>{t=setTimeout(()=>r(new Error(msg)),ms)})]).finally(()=>clearTimeout(t))};
+async function engine(status){
+ if(ff)return ff;
+ if(!window.WebAssembly||!window.Worker)throw new Error('This browser does not support WebAssembly and Web Workers.');
+ let last;
+ for(const cdn of CDNS){
+  let f=null;
+  try{
+   status('Downloading the media engine (first run only)…');
+   const base=cdn+'/@ffmpeg/ffmpeg@0.12.10/dist/umd/',core=cdn+'/@ffmpeg/core@0.12.6/dist/umd/';
+   if(!window.FFmpegWASM)await withTimeout(loadScript(base+'ffmpeg.js'),45000,'Timed out loading ffmpeg.js');
+   if(!window.FFmpegUtil)await withTimeout(loadScript(cdn+'/@ffmpeg/util@0.12.1/dist/umd/index.js'),45000,'Timed out loading the helper script');
+   const src=await withTimeout(fetch(base+'ffmpeg.js').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}),45000,'Timed out reading ffmpeg.js');
+   const id=(src.match(/\.u\((\d+)\)/)||[])[1]||'814';
+   const{FFmpeg}=FFmpegWASM,{toBlobURL}=FFmpegUtil;
+   f=new FFmpeg();
+   f.on('log',({message})=>{logs.push(message);if(logs.length>300)logs.shift()});
+   status('Preparing the engine (about 30 MB)…');
+   const urls3=await withTimeout(Promise.all([toBlobURL(base+id+'.ffmpeg.js','text/javascript'),toBlobURL(core+'ffmpeg-core.js','text/javascript'),toBlobURL(core+'ffmpeg-core.wasm','application/wasm')]),240000,'Timed out downloading the engine');
+   await withTimeout(f.load({classWorkerURL:urls3[0],coreURL:urls3[1],wasmURL:urls3[2]}),120000,'The engine took too long to start');
+   return ff=f;
+  }catch(e){
+   last=e;try{f?.terminate()}catch{}
+   diag('Engine failed via '+cdn+': '+(e&&e.message||e));
+  }
+ }
+ throw new Error('The media engine could not be loaded ('+(last?.message||'unknown')+'). Open this file directly in Chrome or Edge with internet access. Preview panels and sandboxed frames block it.');
+}
+const killEngine=()=>{const f=ff;ff=null;try{f?.terminate()}catch{}};
+
+/* ---------- ffmpeg arguments ---------- */
+function effDuration(it){
+ const ss=parseT(S.ss),to=parseT(S.to);
+ const end=to>0?(it.dur?Math.min(to,it.dur):to):it.dur;
+ return end&&end>ss?end-ss:null;
+}
+function buildArgs(it,inp,out,eff){
+ const f=FM[S.fmt],q=Q[S.q],ss=parseT(S.ss),to=parseT(S.to),H=RES[S.res][1];
+ const a=['-hide_banner','-nostdin'];
+ if(ss>0)a.push('-ss',String(ss));
+ a.push('-i',inp);
+ if((ss>0||to>0)&&eff)a.push('-t',eff.toFixed(2));
+ let audioOut=true;
+ if(f.k==='a'){
+  a.push('-map','0:a:0','-vn','-c:a',f.a);
+  if(f.a==='libmp3lame')a.push('-b:a',q.mp3+'k');
+  else if(f.a!=='flac'&&f.a!=='pcm_s16le')a.push('-b:a',q.ab+'k');
+ }else{
+  const vf=[];
+  if(S.rot==='90')vf.push('transpose=1');else if(S.rot==='180')vf.push('hflip,vflip');else if(S.rot==='270')vf.push('transpose=2');
+  a.push('-map','0:v:0');
+  if(S.fmt==='gif'){
+   audioOut=false;
+   vf.push('fps='+(S.fps||12),H?`scale=-2:min(${H}\\,ih)`:'scale=min(480\\,iw):-2:flags=lanczos','split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse');
+   a.push('-vf',vf.join(','),'-loop','0','-an');
+  }else{
+   if(H)vf.push(`scale=-2:min(${H}\\,ih)`);
+   if(S.fps)vf.push('fps='+S.fps);
+   const vp=f.v==='libvpx-vp9';
+   a.push('-c:v',f.v);
+   if(S.mb&&eff){
+    const total=S.mb*8192/eff*.94,vb=Math.max(60,Math.round(total-(S.mute?0:128)));
+    a.push('-b:v',vb+'k','-maxrate',Math.round(vb*1.4)+'k','-bufsize',vb*2+'k');
+    a.push(...(vp?['-deadline','good','-cpu-used','5']:['-preset','veryfast']));
+   }else if(vp)a.push('-crf',String(q.crf+8),'-b:v','0','-deadline','good','-cpu-used','5');
+   else a.push('-crf',String(q.crf),'-preset',q.pr);
+   if(vp)a.push('-row-mt','1');
+   if(f.v==='libx264')a.push('-pix_fmt','yuv420p');
+   if(vf.length)a.push('-vf',vf.join(','));
+   if(S.mute){a.push('-an');audioOut=false}
+   else a.push('-map','0:a:0?','-c:a',f.a,'-b:a',(S.mb?96:q.ab)+'k');
+   if(S.fmt==='mp4'||S.fmt==='mov')a.push('-movflags','+faststart');
+  }
+ }
+ if(S.norm&&audioOut)a.push('-af','loudnorm=I=-16:TP=-1.5:LRA=11');
+ a.push('-sn','-dn','-y',out);
+ return a;
+}
+
+/* ---------- conversion ---------- */
+class Cancelled extends Error{}
+async function convert(it,ui){
+ const f=FM[S.fmt];
+ if(it.kind==='audio'&&f.k==='v')throw new Error('This is an audio file, so it cannot be converted to a video format. Pick an audio format.');
+ const ss=parseT(S.ss),to=parseT(S.to);
+ if(Number.isNaN(ss)||Number.isNaN(to))throw new Error('Trim times must look like 90 or 1:30.');
+ const eff=effDuration(it);
+ if(it.dur&&ss>=it.dur)throw new Error('Trim start is after the end of the file.');
+ if(to>0&&to<=ss)throw new Error('Trim end must be after trim start.');
+ if(S.mb&&f.k==='v'&&!eff)throw new Error('Target size needs the file duration, which could not be read. Choose a quality preset instead.');
+ let eng;
+ try{eng=await engine(ui.status)}
+ catch(e){
+  if(cancelled)throw new Cancelled();
+  if(S.fmt!=='gif'&&window.MediaRecorder&&(window.AudioContext||window.webkitAudioContext)){
+   toast('The media engine is not available here, so Browser mode is used. It records in real time and your browser picks the format.','warning',12000);
+   return nativeConvert(it,ui);
+  }
+  throw e;
+ }
+ if(cancelled)throw new Cancelled();
+ const inName='input.'+it.ext,out='output.'+S.fmt;
+ let inp,mounted=false;
+ logs=[];
+ try{
+  ui.status('Opening file…');
+  try{
+   try{await eng.createDir('/in')}catch{}
+   await eng.mount('WORKERFS',{files:[new File([it.file],inName)]},'/in');
+   inp='/in/'+inName;mounted=true;
+  }catch{
+   await eng.writeFile(inName,new Uint8Array(await it.file.arrayBuffer()));inp=inName;
+  }
+  if(cancelled)throw new Cancelled();
+  const t0=performance.now();
+  const onP=({time})=>{if(eff&&time>0){const r=Math.min(time/1e6/eff,.99);ui.ratio(r,(performance.now()-t0)/1000)}};
+  eng.on('progress',onP);
+  ui.status('Processing…');
+  let code;
+  try{code=await eng.exec(buildArgs(it,inp,out,eff))}
+  catch(e){if(cancelled)throw new Cancelled();throw e}
+  finally{try{eng.off('progress',onP)}catch{}}
+  if(cancelled)throw new Cancelled();
+  if(code!==0)throw new Error(`The engine stopped with error code ${code}. The file may be damaged, use an unsupported codec, or be too big for browser memory.`);
+  let data;
+  try{data=await eng.readFile(out)}catch{throw new Error('No output was produced. This format may not work with this input.')}
+  if(!data||!data.byteLength)throw new Error('The output file is empty. Try another format.');
+  const blob=new Blob([data],{type:f.m});
+  const base=(it.file.name.replace(/\.[^.]+$/,'').replace(/[\u0000-\u001f\\/:*?"<>|]+/g,'-').replace(/^[.\s-]+|[.\s-]+$/g,'').slice(0,100))||'output';
+  return{blob,name:`${base}-mediaforge.${S.fmt}`,ms:performance.now()-t0,log:logs.join('\n'),fmt:S.fmt,kind:f.k};
+ }finally{
+  if(ff){
+   try{if(mounted)await ff.unmount('/in')}catch{}
+   try{await ff.deleteFile(out)}catch{}
+   if(!mounted)try{await ff.deleteFile(inName)}catch{}
+  }
+ }
+}
+
+/* ---------- Browser mode (fallback when the engine cannot load) ---------- */
+async function nativeConvert(it,ui){
+ const f=FM[S.fmt],ss=parseT(S.ss),isA=f.k==='a',q=Q[S.q],AC=window.AudioContext||window.webkitAudioContext;
+ const url=URL.createObjectURL(it.file),v=document.createElement(it.kind==='audio'?'audio':'video'),ac=new AC();
+ v.src=url;v.playsInline=true;v.preload='auto';logs=['Browser mode (MediaRecorder)'];
+ try{
+  ui.status('Opening file…');
+  await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=()=>rej(new Error('Your browser cannot play this file, so Browser mode cannot record it.'))});
+  const dur=v.duration,end=Math.min(parseT(S.to)||dur,dur),len=end-ss;
+  if(!(len>0)||!Number.isFinite(len))throw new Error('Nothing to record. Check the trim times.');
+  const dest=ac.createMediaStreamDestination();ac.createMediaElementSource(v).connect(dest);
+  const tracks=[...dest.stream.getAudioTracks()];
+  if(!isA){
+   const cs=v.captureStream?v.captureStream():v.mozCaptureStream?v.mozCaptureStream():null;
+   if(!cs)throw new Error('This browser cannot capture video. Use Chrome, Edge or Firefox.');
+   tracks.unshift(...cs.getVideoTracks());
+  }
+  const types=isA?['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus']:['video/mp4;codecs=avc1,mp4a.40.2','video/webm;codecs=vp9,opus','video/webm'];
+  const mime=types.find(t=>MediaRecorder.isTypeSupported(t));
+  if(!mime)throw new Error('This browser cannot record in a supported format.');
+  const kbps=S.mb?Math.max(200,Math.round(S.mb*8192/len*.9)):{low:800,balanced:2000,high:4000,max:8000}[S.q];
+  const rec=new MediaRecorder(new MediaStream(tracks),isA?{mimeType:mime,audioBitsPerSecond:q.ab*1000}:{mimeType:mime,videoBitsPerSecond:Math.max(150,kbps-96)*1000,audioBitsPerSecond:96000});
+  const chunks=[],stopped=new Promise(r=>{rec.onstop=r});
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  if(ss>0)await new Promise(r=>{v.onseeked=r;v.currentTime=ss});
+  await ac.resume();
+  ui.status('Recording in real time… keep this tab open.');
+  const t0=performance.now();
+  rec.start(1000);await v.play();
+  await new Promise(res=>{const iv=setInterval(()=>{ui.ratio(Math.min(Math.max((v.currentTime-ss)/len,.001),1),(performance.now()-t0)/1000);if(cancelled||v.ended||v.currentTime>=end-.05){clearInterval(iv);res()}},250)});
+  v.pause();if(rec.state!=='inactive')rec.stop();await stopped;
+  if(cancelled)throw new Cancelled();
+  const blob=new Blob(chunks,{type:mime.split(';')[0]});
+  if(!blob.size)throw new Error('Nothing was recorded.');
+  const ext=mime.includes('mp4')?(isA?'m4a':'mp4'):mime.startsWith('audio/ogg')?'ogg':'webm';
+  const base=it.file.name.replace(/\.[^.]+$/,'').replace(/[\\/:*?"<>|\u0000-\u001f]+/g,'-').slice(0,100)||'output';
+  return{blob,name:base+'-mediaforge.'+ext,ms:performance.now()-t0,log:logs.join('\n'),fmt:ext,kind:isA?'a':'v'};
+ }finally{ac.close().catch(()=>{});URL.revokeObjectURL(url);v.removeAttribute('src')}
+}
+
+/* ---------- run queue ---------- */
+const bar=$('#bar');
+const ui={
+ status:t=>{$('#pstat').textContent=t},
+ ratio:(r,el)=>{bar.classList.remove('ind');bar.firstElementChild.style.width=(r*100).toFixed(1)+'%';const p=Math.round(r*100);bar.setAttribute('aria-valuenow',p);
+  $('#ppct').textContent=p+'%'+(r>.05&&el?' · about '+fmtT(el/r*(1-r))+' left':'')},
+ reset:()=>{bar.classList.add('ind');bar.firstElementChild.style.width='';bar.removeAttribute('aria-valuenow');$('#ppct').textContent=''}
+};
+async function run(){
+ if(running||!items.length)return;
+ readSettings();saveS();
+ running=true;cancelled=false;results=[];revokeUrls();$('#results').replaceChildren();$('#resw').hidden=true;
+ $('#prog').hidden=false;updateAction();$('#cancel').disabled=false;$('#cancel').textContent='Cancel';
+ const batch=items.slice();
+ for(let i=0;i<batch.length&&!cancelled;i++){
+  const it=batch[i];
+  $('#pname').textContent=(batch.length>1?`File ${i+1} of ${batch.length}: `:'')+it.file.name;
+  ui.reset();ui.status('Preparing…');
+  try{
+   const r=await convert(it,ui);
+   results.push({it,r});addResult(it,r);
+  }catch(e){
+   if(e instanceof Cancelled||cancelled)break;
+   console.error(e);
+   addFailure(it,e.message||'Processing failed.');
+   toast(`${it.file.name}: ${e.message}`,'error',12000);
+  }
+ }
+ running=false;$('#prog').hidden=true;updateAction();
+ $('#resw').hidden=!$('#results').children.length;
+ $('#dlall').hidden=results.length<2;
+ if(cancelled){toast('Cancelled.','warning');cancelled=false}
+}
+$('#go').onclick=run;
+let armed=0;
+function armCancel(){if(Date.now()-armed<4000)return true;armed=Date.now();$('#cancel').textContent='Click again to confirm';setTimeout(()=>{if(!cancelled&&running)$('#cancel').textContent='Cancel'},4000);return false}
+$('#cancel').onclick=()=>{
+ if(!running)return;
+ if(!armCancel())return;
+ cancelled=true;$('#cancel').disabled=true;$('#cancel').textContent='Cancelling…';ui.status('Cancelling…');killEngine();
+};
+addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&!running&&items.length){e.preventDefault();run()}
+});
+addEventListener('beforeunload',e=>{if(running){e.preventDefault();e.returnValue=''}});
+
+/* ---------- results ---------- */
+function revokeUrls(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[]}
+function saveBlob(blob,name){
+ const u=URL.createObjectURL(blob);urls.push(u);
+ const a=h('a',{href:u,download:name,rel:'noopener'});a.style.display='none';document.body.append(a);a.click();a.remove();
+}
+function addResult(it,r){
+ const before=it.file.size,after=r.blob.size,saved=before-after,pct=before?Math.abs(saved/before*100):0;
+ const url=URL.createObjectURL(r.blob);urls.push(url);
+ const prev=r.fmt==='gif'?h('img',{class:'pv',src:url,alt:'Preview of '+r.name}):r.kind==='a'?h('audio',{controls:true,src:url,preload:'metadata'}):h('video',{controls:true,src:url,preload:'metadata',playsinline:true});
+ const stat=(l,v)=>h('div',{class:'stat'},h('small',{text:l}),h('b',{text:v}));
+ $('#results').append(h('li',{class:'card'},
+  h('div',{class:'row'},h('b',{style:'overflow-wrap:anywhere',text:r.name}),h('span',{class:'tag '+(saved>0?'ok':'w'),text:saved>0?Math.round(pct)+'% smaller':'Larger than original'})),
+  h('div',{class:'stats'},stat('Original',fmtB(before)),stat('Output',fmtB(after)),stat('Change',(saved>0?'−':'+')+fmtB(Math.abs(saved))),stat('Time',(r.ms/1000).toFixed(1)+' s')),
+  prev,
+  h('div',{class:'row',style:'margin-top:.6rem'},
+   h('button',{class:'btn p',type:'button',text:'Download',onclick:()=>{saveBlob(r.blob,r.name);toast('Downloading '+r.name,'success',3500)}}),
+   h('details',{},h('summary',{class:'mut',text:'Engine log'}),h('pre',{text:r.log||'No log.'})))));
+}
+function addFailure(it,msg){
+ $('#results').append(h('li',{class:'card'},h('div',{class:'row'},h('b',{style:'overflow-wrap:anywhere',text:it.file.name}),h('span',{class:'tag w',text:'Failed'})),h('p',{class:'mut',text:msg}),
+  h('details',{},h('summary',{class:'mut',text:'Engine log'}),h('pre',{text:logs.join('\n')||'No log.'}))));
+}
+$('#dlall').onclick=async()=>{for(const{r}of results){saveBlob(r.blob,r.name);await new Promise(x=>setTimeout(x,400))}};
+$('#again').onclick=()=>{if(running)return;items=[];results=[];revokeUrls();$('#results').replaceChildren();$('#resw').hidden=true;renderFiles();scrollTo({top:0,behavior:'smooth'})};
+addEventListener('pagehide',revokeUrls);
+
+/* ---------- diagnostics ---------- */
+const dlog=[];
+function storageOK(){try{localStorage.setItem('mf100:t','1');localStorage.removeItem('mf100:t');return true}catch{return false}}
+function renderDiag(){
+ const t=$('#diagtxt');if(!t)return;
+ const yn=(n,v)=>n+': '+(v?'yes':'NO');
+ t.textContent=['Page: '+location.protocol+'//'+(location.host||'(local file)'),'Inside a frame or preview: '+(top!==self?'YES (open the file directly instead)':'no'),
+  yn('WebAssembly',window.WebAssembly),yn('Web Workers',window.Worker),yn('MediaRecorder (Browser mode)',window.MediaRecorder),yn('Saved settings',storageOK()),
+  ...(window.__errs||[]).map(e=>'Error: '+e),...dlog].join('\n');
+}
+function diag(m){dlog.push(m);renderDiag()}
+addEventListener('error',e=>{toast('Script error: '+(e.message||'unknown'),'error',12000);renderDiag()});
+addEventListener('unhandledrejection',e=>{diag('Promise error: '+((e.reason&&e.reason.message)||e.reason));});
+$('#test').onclick=async()=>{
+ const b=$('#test');b.disabled=true;diag('Testing the media engine…');
+ try{await engine(m=>diag(m));diag('Engine OK. Conversions will run at full speed.');toast('Media engine is ready.','success')}
+ catch(e){diag('Engine FAILED: '+e.message)}
+ b.disabled=false;
+};
+renderDiag();
+if(top!==self)toast('This page is inside a frame or preview. For full features, download the file and open it directly in Chrome or Edge.','warning',15000);
+
+buildSettings();renderFiles();
+if(!crossOriginIsolated)console.info('[MediaForge] Running single-thread engine.');
+</script>
+</body>
+</html>
