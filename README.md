@@ -1,7 +1,5 @@
 # private-video-compressor
 
-# Private Video Compressor 🚀
-
 A 100% privacy-first, client-side video and audio compressor and converter powered by **FFmpeg.wasm**. 
 
 ## ✨ Features
